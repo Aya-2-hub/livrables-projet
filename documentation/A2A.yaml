@@ -1,0 +1,233 @@
+# Protocole Agent-to-Agent - Spécification
+
+version: "1.1.0"
+protocol: "a2a-websocket-json"
+description: |
+  Protocole de communication sécurisé et extensible entre agents AI via WebSocket avec payload JSON.
+  Supporte l'authentification, le monitoring, la traçabilité et la gestion avancée des erreurs.
+
+## Métadonnées de communication
+
+transport:
+  protocol: "websocket"
+  encoding: "json"
+  default_port: 8765
+  timeout_ms: 30000
+  reconnect_attempts: 3
+  encryption: "TLS"
+  heartbeat_interval: 10000  # ms
+  max_message_size: 65536    # octets
+
+security:
+  authentication: "JWT"
+  token_header: "Authorization"
+  encryption: "TLS"
+  allowed_agents:
+    - "agent-text-generator"
+    - "agent-image-processor"
+    - "agent-controller"
+  handshake:
+    description: |
+      L'authentification s'effectue lors de l'ouverture du WebSocket par transmission du token JWT dans le header 'Authorization'.
+      Les agents doivent être autorisés et déclarés dans la liste allowed_agents.
+      Les échanges sont chiffrés via TLS.
+    fields:
+      - token: JWT signé
+      - agent_id: identifiant unique de l'agent
+      - protocol_version: version du protocole attendue
+
+monitoring:
+  tracing: true
+  trace_id: "string (uuid)"
+  logging: "centralisé"
+  metrics:
+    - "latence"
+    - "erreurs"
+    - "nombre de messages"
+  alerting: "configurable (Grafana, Prometheus...)"
+
+## Structure des messages
+
+message_schema:
+  request:
+    type: "object"
+    required: ["message_id", "sender", "action", "timestamp", "trace_id"]
+    properties:
+      message_id:
+        type: "string"
+        format: "uuid"
+        description: "Identifiant unique du message"
+      sender:
+        type: "string"
+        pattern: "^agent-[a-z0-9-]+$"
+        description: "ID de l'agent émetteur"
+      action:
+        type: "string"
+        enum: ["generate_text", "process_image", "get_status", "execute_command"]
+        description: "Type d'action demandée"
+      timestamp:
+        type: "string"
+        format: "datetime"
+        description: "Horodatage de l'émission"
+      payload:
+        type: "object"
+        description: "Données spécifiques à l'action"
+      priority:
+        type: "integer"
+        minimum: 1
+        maximum: 10
+        default: 5
+        description: "Priorité du message"
+      protocol_version:
+        type: "string"
+        default: "1.1.0"
+        description: "Version du protocole"
+      trace_id:
+        type: "string"
+        format: "uuid"
+        description: "ID de traçabilité pour le monitoring distribué"
+
+  response:
+    type: "object"
+    required: ["message_id", "status", "timestamp", "trace_id"]
+    properties:
+      message_id:
+        type: "string"
+        format: "uuid"
+        description: "ID du message original"
+      status:
+        type: "string"
+        enum: ["success", "error", "processing", "timeout"]
+      timestamp:
+        type: "string"
+        format: "datetime"
+      result:
+        type: "object"
+        description: "Résultat de l'opération"
+      error:
+        type: "object"
+        properties:
+          code:
+            type: "string"
+          message:
+            type: "string"
+          details:
+            type: "object"
+      trace_id:
+        type: "string"
+        format: "uuid"
+        description: "ID de traçabilité pour le monitoring distribué"
+
+## Actions supportées
+
+actions:
+  generate_text:
+    description: "Génération de texte via modèle AI"
+    request_payload:
+      type: "object"
+      required: ["prompt"]
+      properties:
+        prompt:
+          type: "string"
+        model:
+          type: "string"
+          default: "gpt-4"
+        max_tokens:
+          type: "integer"
+          default: 1000
+        parameters:
+          type: "object"
+          description: "Paramètres avancés (temperature, top_p...)"
+    response_payload:
+      type: "object"
+      properties:
+        generated_text:
+          type: "string"
+        tokens_used:
+          type: "integer"
+        model:
+          type: "string"
+        parameters:
+          type: "object"
+
+  process_image:
+    description: "Traitement d'image"
+    request_payload:
+      type: "object"
+      required: ["image_data"]
+      properties:
+        image_data:
+          type: "string"
+          format: "base64"
+        operation:
+          type: "string"
+          enum: ["analyze", "transform", "classify"]
+        parameters:
+          type: "object"
+          description: "Paramètres avancés (filters, resize...)"
+
+  get_status:
+    description: "Demande du statut de l'agent"
+    request_payload:
+      type: "object"
+      properties:
+        job_id:
+          type: "string"
+    response_payload:
+      type: "object"
+      properties:
+        status:
+          type: "string"
+        uptime:
+          type: "integer"
+        jobs:
+          type: "array"
+          items:
+            type: "string"
+
+  execute_command:
+    description: "Exécution d'une commande personnalisée sur l'agent"
+    request_payload:
+      type: "object"
+      required: ["command"]
+      properties:
+        command:
+          type: "string"
+        args:
+          type: "object"
+          description: "Arguments de la commande"
+
+## Gestion des erreurs et fiabilité
+
+error_handling:
+  retry_policy:
+    max_retries: 3
+    backoff_ms: 500
+  error_response:
+    type: "object"
+    properties:
+      code:
+        type: "string"
+      message:
+        type: "string"
+      details:
+        type: "object"
+  timeout_response:
+    status: "timeout"
+    suggestion: "Vérifiez la connectivité ou réessayez plus tard."
+  logging:
+    level: "INFO/ERROR"
+    storage: "centralisé"
+  replay_protection:
+    check_timestamp: true
+    check_message_id: true
+
+## Versionnement et compatibilité
+
+versioning:
+  protocol_version: "1.1.0"
+  backward_compatibility: true
+  upgrade_policy: |
+    Les agents doivent vérifier la version du protocole lors du handshake et refuser ou adapter les messages incompatibles.
+    Les nouveaux champs doivent être optionnels pour préserver la compatibilité ascendante.
+

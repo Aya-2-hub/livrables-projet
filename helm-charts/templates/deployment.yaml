@@ -1,0 +1,46 @@
+{{- range $serviceName, $serviceConfig := .Values.services }}
+{{- if $serviceConfig.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gen-ai-app.fullname" $ }}-{{ $serviceName }}
+  labels:
+    app: {{ include "gen-ai-app.fullname" $ }}
+    service: {{ $serviceName }}
+    environment: {{ $.Values.global.environment }}
+spec:
+  replicas: {{ $serviceConfig.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "gen-ai-app.fullname" $ }}
+      service: {{ $serviceName }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "gen-ai-app.fullname" $ }}
+        service: {{ $serviceName }}
+        environment: {{ $.Values.global.environment }}
+    spec:
+      containers:
+      - name: {{ $serviceName }}
+        image: {{ index $.Values.global.images $serviceName | default (printf "ghcr.io/%s:latest" $serviceName) }}
+        ports:
+        - containerPort: {{ $serviceConfig.port }}
+        env:
+        - name: ENVIRONMENT
+          value: {{ $.Values.global.environment | quote }}
+        - name: SERVICE_NAME
+          value: {{ $serviceName | quote }}
+        - name: CLOUD_PROVIDER
+          value: {{ $.Values.global.cloudProvider | quote }}
+        resources:
+          {{- $envConfig := include "gen-ai-app.environmentConfig" $ | fromYaml }}
+          requests:
+            memory: {{ $serviceConfig.resources.requests.memory | default $envConfig.resources.memory }}
+            cpu: {{ $serviceConfig.resources.requests.cpu | default $envConfig.resources.cpu }}
+          limits:
+            memory: {{ $serviceConfig.resources.limits.memory | default (include "gen-ai-app.getMemoryLimit" $) }}
+            cpu: {{ $serviceConfig.resources.limits.cpu | default (include "gen-ai-app.getCpuLimit" $) }}
+---
+{{- end }}
+{{- end }}

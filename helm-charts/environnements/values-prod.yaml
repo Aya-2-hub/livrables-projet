@@ -1,0 +1,19 @@
+replicaCount: 4
+image:
+  tag: stable
+service:
+  type: LoadBalancer
+env:
+  LOG_LEVEL: warning
+ingress:
+  enabled: true
+  hosts:
+    - host: genai.prod.example.com
+resources:
+  limits:
+    cpu: "2"
+    memory: "2Gi"
+  requests:
+    cpu: "1"
+    memory: "1Gi"
+cloudProvider: gke

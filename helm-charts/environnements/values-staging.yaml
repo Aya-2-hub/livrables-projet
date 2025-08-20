@@ -1,0 +1,19 @@
+replicaCount: 2
+image:
+  tag: staging
+service:
+  type: ClusterIP
+env:
+  LOG_LEVEL: info
+ingress:
+  enabled: true
+  hosts:
+    - host: genai.staging.example.com
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+cloudProvider: generic

@@ -1,0 +1,146 @@
+openapi: 3.0.0
+info:
+  title: GenAI API
+  version: 1.0.0
+  description: |
+    API REST pour générer du texte avec un modèle GenAI.
+servers:
+  - url: https://api.genai.local
+    description: Serveur principal
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+paths:
+  /v1/generate:
+    post:
+      summary: Génère du texte avec le modèle GenAI.
+      description: |
+        Envoie un prompt pour générer du texte.
+        Spécifiez le modèle et les paramètres optionnels pour personnaliser la génération.
+        L'API est conçue pour être extensible à tout modèle compatible.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+                - model
+              properties:
+                prompt:
+                  type: string
+                  example: "Décris l'évolution de l'intelligence artificielle."
+                  maxLength: 5000
+                model:
+                  type: string
+                  description: "Nom du modèle GenAI "
+                  example: "gpt-4"
+                parameters:
+                  type: object
+                  description: "Paramètres avancés propres au modèle (temperature, max_tokens, etc.)"
+                  additionalProperties: true
+                  example:
+                    temperature: 0.7
+                    max_tokens: 512
+                    top_p: 0.95
+      responses:
+        '200':
+          description: Résultat généré par le modèle.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  output:
+                    type: string
+                  tokens_used:
+                    type: integer
+                  model:
+                    type: string
+                  parameters:
+                    type: object
+        '400':
+          description: Requête invalide.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '429':
+          description: Limite atteinte.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  retry_after:
+                    type: integer
+        '500':
+          description: Erreur serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /v1/models:
+    get:
+      summary: Liste les modèles GenAI disponibles.
+      description: |
+        Récupère la liste des modèles supportés par l’API avec leurs paramètres et versions.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des modèles.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        version:
+                          type: string
+                        description:
+                          type: string
+                        parameters:
+                          type: array
+                          items:
+                            type: string
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

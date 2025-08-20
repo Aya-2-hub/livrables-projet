@@ -1,0 +1,21 @@
+{{- range $serviceName, $serviceConfig := .Values.services }}
+{{- if $serviceConfig.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gen-ai-app.fullname" $ }}-{{ $serviceName }}
+  labels:
+    app: {{ include "gen-ai-app.fullname" $ }}
+    service: {{ $serviceName }}
+spec:
+  selector:
+    app: {{ include "gen-ai-app.fullname" $ }}
+    service: {{ $serviceName }}
+  ports:
+  - port: {{ $serviceConfig.port }}
+    targetPort: {{ $serviceConfig.port }}
+    protocol: TCP
+  type: ClusterIP
+---
+{{- end }}
+{{- end }}

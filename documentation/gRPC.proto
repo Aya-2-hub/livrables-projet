@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+service AITextService {
+  // Génération classique
+  rpc GenerateText (PromptRequest) returns (TextResponse);
+
+  // Génération en streaming
+  rpc StreamText (PromptRequest) returns (stream TextChunk);
+}
+
+message PromptRequest {
+  string prompt = 1;
+  string model = 2;
+  string model_version = 3; 
+  map<string, string> parameters = 4; // temperature, top_p, etc.
+}
+
+message TextResponse {
+  string output = 1;
+  int32 tokens_used = 2;
+  string error = 3; // si l’appel échoue
+}
+
+message TextChunk {
+  string chunk = 1;
+}

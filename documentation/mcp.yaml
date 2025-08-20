@@ -1,0 +1,350 @@
+# Model Context Protocol (MCP) - Spécification v1.1
+# Protocole de communication entre serveurs de ressources et clients AI
+
+version: "1.1.0"
+protocol: "mcp-json-rpc"
+description: |
+  Model Context Protocol permet aux modèles AI d'accéder dynamiquement à des ressources externes.
+  Cette version enrichie inclut la sécurité, la traçabilité, la pagination et le monitoring.
+
+## Métadonnées de transport
+
+transport:
+  protocol: "json-rpc-2.0"
+  encoding: "json"
+  transport_layer: "stdio"  # ou websocket, http
+  timeout_ms: 30000
+  encryption: "TLS"
+  heartbeat_interval: 10000  # ms
+  max_message_size: 65536    # octets
+
+security:
+  authentication: "Bearer token"
+  token_header: "Authorization"
+  handshake:
+    description: |
+      L'authentification s'effectue lors de l'établissement de la connexion ou via un header 'Authorization'.
+      Les échanges sont chiffrés via TLS.
+      Les clients doivent être autorisés et déclarés côté serveur.
+    fields:
+      - token: string
+      - protocolVersion: string
+
+monitoring:
+  trace_id: "string (uuid)"
+  logging: "centralisé"
+  metrics:
+    - "latence"
+    - "erreurs"
+    - "nombre de requêtes"
+  alerting: "configurable (Grafana, Prometheus...)"
+
+## Méthodes JSON-RPC supportées
+
+methods:
+  # Initialisation et négociation
+  initialize:
+    description: "Négocie les capacités du client et serveur"
+    request:
+      type: "object"
+      required: ["protocolVersion", "capabilities", "trace_id"]
+      properties:
+        protocolVersion:
+          type: "string"
+          enum: ["2024.11.05", "1.1.0"]
+        capabilities:
+          type: "object"
+          properties:
+            logging:
+              type: "object"
+            prompts:
+              type: "object"
+            resources:
+              type: "object"
+        clientInfo:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            version:
+              type: "string"
+        trace_id:
+          type: "string"
+          format: "uuid"
+    response:
+      type: "object"
+      required: ["protocolVersion", "capabilities", "trace_id"]
+      properties:
+        protocolVersion:
+          type: "string"
+        capabilities:
+          type: "object"
+        serverInfo:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            version:
+              type: "string"
+        trace_id:
+          type: "string"
+          format: "uuid"
+
+  # Gestion des ressources
+  resources/list:
+    description: "Liste toutes les ressources disponibles, avec pagination et filtrage"
+    request:
+      type: "object"
+      properties:
+        page:
+          type: "integer"
+          default: 1
+        page_size:
+          type: "integer"
+          default: 50
+        filter:
+          type: "object"
+        trace_id:
+          type: "string"
+          format: "uuid"
+    response:
+      type: "object"
+      required: ["resources", "trace_id"]
+      properties:
+        resources:
+          type: "array"
+          items:
+            $ref: "#/schemas/Resource"
+        next_page:
+          type: "integer"
+        total_items:
+          type: "integer"
+        trace_id:
+          type: "string"
+          format: "uuid"
+
+  resources/read:
+    description: "Lit le contenu d'une ressource spécifique"
+    request:
+      type: "object"
+      required: ["uri", "trace_id"]
+      properties:
+        uri:
+          type: "string"
+          format: "uri"
+        trace_id:
+          type: "string"
+          format: "uuid"
+    response:
+      type: "object"
+      required: ["content", "trace_id"]
+      properties:
+        content:
+          type: "string"
+        mimeType:
+          type: "string"
+        trace_id:
+          type: "string"
+          format: "uuid"
+
+  # Gestion des prompts
+  prompts/list:
+    description: "Liste les prompts disponibles, avec pagination"
+    request:
+      type: "object"
+      properties:
+        page:
+          type: "integer"
+          default: 1
+        page_size:
+          type: "integer"
+          default: 50
+        filter:
+          type: "object"
+        trace_id:
+          type: "string"
+          format: "uuid"
+    response:
+      type: "object"
+      required: ["prompts", "trace_id"]
+      properties:
+        prompts:
+          type: "array"
+          items:
+            $ref: "#/schemas/Prompt"
+        next_page:
+          type: "integer"
+        total_items:
+          type: "integer"
+        trace_id:
+          type: "string"
+          format: "uuid"
+
+  prompts/get:
+    description: "Récupère un prompt spécifique"
+    request:
+      type: "object"
+      required: ["name", "trace_id"]
+      properties:
+        name:
+          type: "string"
+        arguments:
+          type: "object"
+        trace_id:
+          type: "string"
+          format: "uuid"
+    response:
+      type: "object"
+      required: ["description", "arguments", "trace_id"]
+      properties:
+        description:
+          type: "string"
+        arguments:
+          type: "array"
+          items:
+            type: "object"
+        trace_id:
+          type: "string"
+          format: "uuid"
+
+## Schémas de messages communs
+
+schemas:
+  Resource:
+    type: "object"
+    required: ["uri"]
+    properties:
+      uri:
+        type: "string"
+        format: "uri"
+      name:
+        type: "string"
+      description:
+        type: "string"
+      mimeType:
+        type: "string"
+
+  Prompt:
+    type: "object"
+    required: ["name"]
+    properties:
+      name:
+        type: "string"
+      description:
+        type: "string"
+      arguments:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            description:
+              type: "string"
+            required:
+              type: "boolean"
+
+## Exemples de messages
+
+examples:
+  initialize_request:
+    protocolVersion: "1.1.0"
+    capabilities:
+      resources: {}
+      prompts: {}
+    clientInfo:
+      name: "gen-ai-client"
+      version: "1.0.0"
+    trace_id: "e871af86-3f8a-47d8-9d9f-1f1b6c6d7f3e"
+
+  initialize_response:
+    protocolVersion: "1.1.0"
+    capabilities:
+      resources:
+        list: true
+        read: true
+      prompts:
+        list: true
+        get: true
+    serverInfo:
+      name: "file-resource-server"
+      version: "1.2.0"
+    trace_id: "e871af86-3f8a-47d8-9d9f-1f1b6c6d7f3e"
+
+  resources_list_request:
+    page: 1
+    page_size: 50
+    filter:
+      mimeType: "text/markdown"
+    trace_id: "f248c86a-5e9a-4b2a-bc77-8c6e1a9f4d2b"
+
+  resources_list_response:
+    resources:
+      - uri: "file:///data/documents/report.md"
+        name: "Monthly Report"
+        description: "Monthly financial report"
+        mimeType: "text/markdown"
+      - uri: "file:///data/notes/meeting.md"
+        name: "Meeting Notes"
+        description: "Notes from last meeting"
+        mimeType: "text/markdown"
+    next_page: 2
+    total_items: 24
+    trace_id: "f248c86a-5e9a-4b2a-bc77-8c6e1a9f4d2b"
+
+  resources_read_request:
+    uri: "file:///data/documents/report.md"
+    trace_id: "a8fbc6e2-5d3a-4a3b-8e90-bc32d0e2f9d6"
+
+  resources_read_response:
+    content: "# Monthly Report\n\nSales have increased by 20% this month."
+    mimeType: "text/markdown"
+    trace_id: "a8fbc6e2-5d3a-4a3b-8e90-bc32d0e2f9d6"
+
+## Codes d'erreur standard
+
+error_codes:
+  - code: -32700
+    message: "Parse error"
+    description: "Invalid JSON was received by the server."
+  - code: -32600
+    message: "Invalid Request"
+    description: "The JSON sent is not a valid Request object."
+  - code: -32601
+    message: "Method not found"
+    description: "The method does not exist / is not available."
+  - code: -32602
+    message: "Invalid params"
+    description: "Invalid method parameter(s)."
+  - code: -32603
+    message: "Internal error"
+    description: "Internal JSON-RPC error."
+  - code: -32000
+    message: "Resource not found"
+    description: "The requested resource does not exist."
+  - code: -32001
+    message: "Access denied"
+    description: "Access to the resource is denied."
+  - code: -32002
+    message: "Timeout"
+    description: "The request timed out."
+  - code: -32003
+    message: "Rate Limited"
+    description: "Too many requests, please retry later."
+
+## Workflow typique
+
+workflow:
+  - step: "initialize"
+    description: "Négociation des capacités et authentification sécurisée"
+  - step: "resources/list"
+    description: "Découverte des ressources disponibles (avec pagination et filtrage)"
+  - step: "resources/read"
+    description: "Lecture des ressources nécessaires"
+  - step: "prompts/list"
+    description: "Liste des prompts disponibles (avec pagination)"
+  - step: "prompts/get"
+    description: "Récupération d'un prompt spécifique"
+  - step: "monitoring/logging"
+    description: "Centralisation et traçabilité via trace_id"
+

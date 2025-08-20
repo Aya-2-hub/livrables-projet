@@ -1,0 +1,10 @@
+replicaCount: 1
+image:
+  tag: dev
+service:
+  type: ClusterIP
+env:
+  LOG_LEVEL: debug
+ingress:
+  enabled: false
+cloudProvider: generic
