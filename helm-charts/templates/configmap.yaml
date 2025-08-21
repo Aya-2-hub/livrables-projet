@@ -6,7 +6,7 @@ data:
   environment: {{ .Values.global.environment | quote }}
   cloud_provider: {{ .Values.global.cloudProvider | quote }}
   
-  # Configuration auto-générée pour les services
+  ## Configuration auto-générée pour les services
   {{- range $serviceName, $serviceConfig := .Values.services }}
   {{- if $serviceConfig.enabled }}
   {{ $serviceName | upper }}_PORT: {{ $serviceConfig.port | quote }}
