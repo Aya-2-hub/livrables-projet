@@ -1,0 +1,43 @@
+# Surcharges spécifiques pour environnement LOCAL
+global:
+  isLocal: true
+  isCloud: false
+  host: localhost
+  protocol: http
+
+# Images locales avec tag "local"
+images:
+  textGeneration:
+    tag: local                   
+  imageProcessing:
+    tag: local
+
+# Activation des dépendances embedded lightweights
+dependencies:
+  redis:
+    enabled: true
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "50m"
+        
+  postgresql:
+    enabled: true
+    persistence:
+      enabled: false              # Pas de persistence en local
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+
+# Ports NodePort pour accès direct
+servicePorts:
+  text-generation: 30080
+  redis: 30379
+  postgresql: 30432
+
+# Volumes hostPath pour développement
+volumes:
+  data:
+    enabled: true
+    hostPath: "/tmp/genai-data"
