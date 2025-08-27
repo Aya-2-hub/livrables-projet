@@ -1,28 +1,32 @@
 {{- if .Values.ingress.enabled }}
+# INGRESS UNIQUEMENT EN CLOUD
+{{- if .Values.global.isCloud }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "genai-service.fullname" . }}
+  name: {{ include "genai.fullname" . }}
   annotations:
+    {{- if .Values.ingress.annotations }}
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
-spec:
-  rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host }}
-      http:
-        paths:
-          {{- range .paths }}
-          - path: {{ . }}
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "genai-service.fullname" $ }}
-                port:
-                  number: {{ $.Values.service.port }}
-          {{- end }}
     {{- end }}
-{{- if .Values.ingress.tls }}
+spec:
+  ingressClassName: {{ .Values.ingress.className | default "nginx" }}
+  rules:
+  - host: {{ .Values.ingress.host | default (printf "%s.example.com" .Release.Name) }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "genai.fullname" . }}-text-generation
+            port:
+              number: 8000
+  {{- if .Values.ingress.tls }}
   tls:
-    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  - hosts:
+    - {{ .Values.ingress.host | default (printf "%s.example.com" .Release.Name) }}
+    secretName: {{ .Values.ingress.tlsSecret | default (printf "%s-tls" .Release.Name) }}
+  {{- end }}
 {{- end }}
 {{- end }}
