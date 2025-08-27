@@ -1,32 +1,31 @@
-{{/*
-Détection automatique de la classe de stockage
-*/}}
-{{- define "gen-ai-app.storageClass" -}}
-{{- $provider := .Values.global.cloudProvider | default "standard" -}}
-{{- $storageClasses := dict 
-  "aws" "gp3" 
-  "azure" "managed-premium" 
-  "gcp" "standard" 
-  "digitalocean" "do-block-storage" 
-  "standard" "standard" -}}
-{{- index $storageClasses $provider -}}
+{{/* Labels standards */}}
+{{- define "genai.labels" -}}
+app: {{ .Chart.Name }}
+version: {{ .Chart.Version }}
+environment: {{ .Values.global.environment }}
+deployment: {{ .Values.global.isCloud | ternary "cloud" "local" }}
 {{- end -}}
 
-{{/*
-Génération du nom complet
-*/}}
-{{- define "gen-ai-app.fullname" -}}
-{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{/* Sélecteur d'image intelligent */}}
+{{- define "genai.image" -}}
+{{- $service := .service -}}
+{{- $root := .root -}}
+{{- $config := index $root.Values.images $service -}}
+
+{{- if $root.Values.global.isCloud }}
+{{- /* Cloud: utilise le repository complet */}}
+{{- $config.repository }}:{{ $config.tag | default "latest" }}
+{{- else }}
+{{- /* Local: utilise le nom simple + tag local */}}
+{{- $config.repository }}:{{ $config.tag | default "local" }}
+{{- end }}
 {{- end -}}
 
-{{/*
-Configuration environnementale automatique
-*/}}
-{{- define "gen-ai-app.environmentConfig" -}}
-{{- $env := .Values.global.environment -}}
-{{- $config := dict 
-  "dev" (dict "replicas" 1 "resources" (dict "memory" "256Mi" "cpu" "100m"))
-  "staging" (dict "replicas" 2 "resources" (dict "memory" "512Mi" "cpu" "250m")) 
-  "prod" (dict "replicas" 3 "resources" (dict "memory" "1Gi" "cpu" "500m")) -}}
-{{- index $config $env -}}
+{{/* Détection automatique du contexte */}}
+{{- define "genai.isCloud" -}}
+{{- if .Values.global.isCloud -}}
+true
+{{- else -}}
+false
+{{- end -}}
 {{- end -}}
