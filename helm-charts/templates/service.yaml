@@ -3,19 +3,28 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "gen-ai-app.fullname" $ }}-{{ $serviceName }}
+  name: {{ include "genai.fullname" $ }}-{{ $serviceName }}
   labels:
-    app: {{ include "gen-ai-app.fullname" $ }}
-    service: {{ $serviceName }}
+    {{- include "genai.labels" $ | nindent 4 }}
 spec:
-  selector:
-    app: {{ include "gen-ai-app.fullname" $ }}
-    service: {{ $serviceName }}
+  # CHOIX AUTOMATIQUE du type de service
+  type: {{ if $.Values.global.isCloud }}ClusterIP{{ else }}NodePort{{ end }}
+  
   ports:
   - port: {{ $serviceConfig.port }}
     targetPort: {{ $serviceConfig.port }}
     protocol: TCP
-  type: ClusterIP
+    name: http
+    
+    # NODEPORT UNIQUEMENT en local
+    {{- if and (not $.Values.global.isCloud) (hasKey $.Values.servicePorts $serviceName) }}
+    nodePort: {{ index $.Values.servicePorts $serviceName }}
+    {{- end }}
+    
+  selector:
+    {{- include "genai.selectorLabels" $ | nindent 4 }}
+    service: {{ $serviceName }}
+    
 ---
 {{- end }}
 {{- end }}
