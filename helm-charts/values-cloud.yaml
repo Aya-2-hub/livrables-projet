@@ -1,0 +1,47 @@
+# Configuration de base pour TOUS les environnements cloud
+global:
+  isCloud: true
+  isLocal: false
+  protocol: https
+
+# Images cloud avec tags stables
+images:
+  textGeneration:
+    tag: v1.0.0
+  imageProcessing:
+    tag: v1.0.0
+
+# Resources cloud appropriées
+services:
+  text-generation:
+    replicaCount: 2
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+# Dépendances cloud avec persistence
+dependencies:
+  redis:
+    enabled: true
+    architecture: standalone
+    persistence:
+      enabled: true
+      size: "10Gi"
+      
+  postgresql:
+    enabled: true
+    persistence:
+      enabled: true
+      size: "20Gi"
+
+# Ingress activé pour cloud
+ingress:
+  enabled: true
+
+# Monitoring activé pour cloud
+monitoring:
+  enabled: true
