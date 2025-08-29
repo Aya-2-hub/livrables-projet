@@ -1,0 +1,60 @@
+# Configuration pour Minikube/Docker Desktop
+global:
+  environment: minikube
+  isLocal: true
+  isCloud: false
+  clusterDomain: cluster.local
+
+# Images locales avec build local
+images:
+  textGeneration:
+    repository: text-gen-service
+    tag: latest  
+  imageProcessing:
+    repository: image-process-service
+    tag: latest
+
+# Resources minimales pour développement
+services:
+  text-generation:
+    replicaCount: 1
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+# Désactivation des dépendances coûteuses
+dependencies:
+  redis:
+    enabled: true
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+  postgresql:
+    enabled: true
+    persistence:
+      enabled: false  
+
+# Pas d'ingress, on utilise NodePort
+ingress:
+  enabled: false
+
+# Ports NodePort pour accès direct
+servicePorts:
+  text-generation: 30080
+  redis: 30379
+  postgresql: 30432
+
+# Monitoring désactivé en local
+monitoring:
+  enabled: false
+
+# Volumes hostPath pour développement
+volumes:
+  data:
+    enabled: true
+    hostPath: "/tmp/genai-data"
