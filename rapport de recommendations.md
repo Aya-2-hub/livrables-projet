@@ -1,6 +1,6 @@
 ## Recommendations report on potential long-term improvements or refactors.
 
-Suggestions Techniques et Architecturales
+# Suggestions Techniques et Architecturales
 1. Optimisations de l'Architecture Actuelle
 
 **Recommandation**: Migration vers Service Mesh  
@@ -49,7 +49,7 @@ Suggestions Techniques et Architecturales
 - Compression des données avant stockage
 - Politique de retention aggressive
 
-Automatisation et CI/CD Avancée  
+# Automatisation et CI/CD Avancée  
 1. Pipeline CI/CD de Nouvelle Génération
 
 **Recommandation**: GitOps avec ArgoCD  
@@ -82,7 +82,7 @@ Automatisation et CI/CD Avancée
 - Benchmarks performance dans le pipeline
 - Alerting sur les régressions de performance
 
-Sécurité Renforcée
+# Sécurité Renforcée
 1. Hardening de l'InfrastructureSécurité Renforcée
 
 **Recommandation**: Zero Trust Architecture  
