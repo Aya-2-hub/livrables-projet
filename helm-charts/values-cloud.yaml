@@ -23,21 +23,6 @@ services:
         memory: "1Gi"
         cpu: "500m"
 
-# Dépendances cloud avec persistence
-dependencies:
-  redis:
-    enabled: true
-    architecture: standalone
-    persistence:
-      enabled: true
-      size: "10Gi"
-      
-  postgresql:
-    enabled: true
-    persistence:
-      enabled: true
-      size: "20Gi"
-
 # Ingress activé pour cloud
 ingress:
   enabled: true
