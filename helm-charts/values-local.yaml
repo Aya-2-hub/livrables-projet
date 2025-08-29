@@ -12,24 +12,6 @@ images:
   imageProcessing:
     tag: local
 
-# Activation des dépendances embedded lightweights
-dependencies:
-  redis:
-    enabled: true
-    resources:
-      requests:
-        memory: "128Mi"
-        cpu: "50m"
-        
-  postgresql:
-    enabled: true
-    persistence:
-      enabled: false              # Pas de persistence en local
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-
 # Ports NodePort pour accès direct
 servicePorts:
   text-generation: 30080
