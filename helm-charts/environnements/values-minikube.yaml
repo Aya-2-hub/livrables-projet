@@ -26,19 +26,6 @@ services:
         memory: "1Gi"
         cpu: "500m"
 
-# Désactivation des dépendances coûteuses
-dependencies:
-  redis:
-    enabled: true
-    resources:
-      requests:
-        memory: "128Mi"
-        cpu: "100m"
-  postgresql:
-    enabled: true
-    persistence:
-      enabled: false  
-
 # Pas d'ingress, on utilise NodePort
 ingress:
   enabled: false
