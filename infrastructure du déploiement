@@ -1,0 +1,77 @@
+# Script de déploiement Local
+
+#!/bin/bash
+set -e
+
+echo "Déploiement local GenAI sur Kubernetes..."
+
+## Vérification des pré-requis
+echo "Vérification des pré-requis..."
+command -v minikube >/dev/null 2>&1 || { echo "Minikube requis"; exit 1; }
+command -v kubectl >/dev/null 2>&1 || { echo "kubectl requis"; exit 1; }
+command -v helm >/dev/null 2>&1 || { echo "Helm requis"; exit 1; }
+
+## Démarrer Minikube si nécessaire
+if ! minikube status >/dev/null 2>&1; then
+    echo "Démarrage de Minikube..."
+    minikube start --cpus=4 --memory=8192 --disk-size=20g
+fi
+
+## Configurer l'environnement Docker
+echo "Configuration de l'environnement Docker..."
+eval $(minikube docker-env)
+
+## Build des images locales (si nécessaire)
+echo "Construction des images locales..."
+docker build -t text-gen-service:local -f Dockerfile.text .
+docker build -t image-process-service:local -f Dockerfile.image .
+
+## Déploiement Helm
+echo "Déploiement avec Helm..."
+helm upgrade --install genai-local . \
+  --namespace genai-local \
+  --create-namespace \
+  --values values-local.yaml \
+  --atomic \
+  --wait
+
+## Configuration de l'accès
+echo "Configuration des accès..."
+kubectl port-forward -n genai-local svc/genai-local-text-generation 8080:8000 &
+
+echo "Déploiement terminé!"
+echo "Status: kubectl get pods -n genai-local"
+echo "API: http://localhost:8080"
+echo "Health: http://localhost:8080/health"
+
+# Validation du déploiement local
+
+#!/bin/bash
+echo "Validation du déploiement local..."
+
+## Vérifier les pods
+kubectl get pods -n genai-local
+
+## Vérifier les services
+kubectl get services -n genai-local
+
+## Test de santé
+curl http://localhost:8080/health || echo "service non accessible"
+
+## Test API simple
+curl -X POST http://localhost:8080/api/v1/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Hello"}' || echo "API non fonctionnelle"
+
+echo "Validation terminée"
+
+## Accéder aux logs
+kubectl logs -n genai-local -l app=genai-local --tail=50
+
+## Redémarrer un service
+kubectl rollout restart deployment -n genai-local genai-local-text-generation
+
+## Supprimer le déploiement
+helm uninstall genai-local -n genai-local
+kubectl delete namespace genai-local
+
