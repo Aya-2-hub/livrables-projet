@@ -52,12 +52,12 @@
 
 2. Sécurité Applicative
 
-**Recommandation**: Security Scanning Continu
-**Bénéfices**: Détection des vulnérabilités en amont
+**Recommandation**: Security Scanning Continu  
+**Bénéfices**: Détection des vulnérabilités en amont  
 **Implémentation**:
-- → SAST/DAST dans le pipeline CI
-- → Scanning des dépendances à chaque build
-- → Scanning des images Docker
+- SAST/DAST dans le pipeline CI
+- Scanning des dépendances à chaque build
+- Scanning des images Docker
 
 **Recommandation**: Data Loss Prevention  
 **Bénéfices**: Protection des données sensibles  
@@ -66,7 +66,7 @@
 - Chiffrement end-to-end des données sensibles
 - Audit des accès aux données
 
-Scalabilité et Maintenance à Long Terme
+## Scalabilité et Maintenance à Long Terme
 1. Scalabilité Horizontale
 
 **Recommandation**: Serverless Architecture  
