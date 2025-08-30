@@ -1,54 +1,5 @@
 # Recommendations report on potential long-term improvements or refactors.
 
-## Suggestions Techniques et Architecturales
-1. Optimisations de l'Architecture Actuelle
-
-**Recommandation**: Migration vers Service Mesh  
-**Bénéfices**: Observability, sécurité, traffic management  
-**Implémentation**:
-- Adopter Istio ou Linkerd pour le service mesh
-- Configurer le mutual TLS pour toutes les communications
-- Implémenter des retries et timeouts centralisés
-
-**Recommandation**: Refactoring vers une architecture DDD  
-**Bénéfices**: Maintenabilité, évolutivité  
-**Implémentation**:
-- Redéfinir les bounded contexts
-- Implémenter des aggregates racines
-- Adopter CQRS pour les lectures/écritures
-
-2. Adoption de nouvelles Technologies
-
-**Recommandation**: Migration vers WebAssembly pour l'inférence  
-**Bénéfices**: Performance, portabilité, sécurité  
-**Roadmap**:
-- Q2 2024: POC avec WasmEdge
-- Q3 2024: Migration des modèles simples
-- Q4 2024: Migration complète
-
-**Recommandation**: Adoption de ScyllaDB pour les données temps-réel  
-**Bénéfices**: Performance 10x sur les lectures, scalabilité linéaire  
-**Migration**:
-- Commencer par les données de session
-- Étendre aux données de monitoring
-- Finalement migrer les données utilisateur
-
-3. Optimisations des Coûts Cloud
-
-**Recommandation**: Implementation de FinOps  
-**Économies potentielles**: 30-40% des coûts cloud  
-**Actions**:
-- Mettre en place des budgets par service
-- Implémenter l'autoscaling basé sur la demande réelle
-- Utiliser des instances spot pour les workloads non-critiques
-
-**Recommandation**: Optimisation du stockage  
-**Économies**: 50% sur les coûts storage  
-**Stratégie**:
-- Tiered storage (S3 Intelligent Tiering)
-- Compression des données avant stockage
-- Politique de retention aggressive
-
 ## Automatisation et CI/CD Avancée  
 1. Pipeline CI/CD de Nouvelle Génération
 
@@ -98,3 +49,52 @@
 - Migration vers HashiCorp Vault
 - Rotation automatique des secrets
 - Audit trail des accès secrets
+
+2. Sécurité Applicative
+
+**Recommandation**: Security Scanning Continu
+**Bénéfices**: Détection des vulnérabilités en amont
+**Implémentation**:
+- → SAST/DAST dans le pipeline CI
+- → Scanning des dépendances à chaque build
+- → Scanning des images Docker
+
+**Recommandation**: Data Loss Prevention  
+**Bénéfices**: Protection des données sensibles  
+**Implémentation**:
+- Détection des PII dans les prompts
+- Chiffrement end-to-end des données sensibles
+- Audit des accès aux données
+
+Scalabilité et Maintenance à Long Terme
+1. Scalabilité Horizontale
+
+**Recommandation**: Serverless Architecture  
+**Bénéfices**: Scalabilité infinie, coût à l'usage  
+**Roadmap**:
+- Migration des services stateless vers Knative
+- Event-driven architecture avec CloudEvents
+- Auto-scaling basé sur la file d'attente
+
+**Recommandation**: Multi-Cluster Management  
+**Bénéfices**: Résilience géographique, compliance  
+**Implémentation**:
+- Adoption de Cluster API
+- Déploiement multi-région
+- Failover automatisé
+
+2. Maintenance Predictible
+
+**Recommandation**: Automated Canary Analysis  
+**Bénéfices**: Déploiements plus sûrs, moins d'incidents  
+**Implémentation**:
+- Integration avec Istio pour le traffic shifting
+- Analyse automatique des métriques pendant les déploiements
+- Rollback automatique sur détection d'anomalies
+
+**Recommandation**: Predictive Maintenance  
+**Bénéfices**: Réduction des incidents, meilleure disponibilité  
+**Implémentation**:
+- Monitoring de la dégradation des performances
+- Alerting proactive sur les besoins de maintenance
+- Planning automatique des maintenances
