@@ -75,3 +75,17 @@ kubectl rollout restart deployment -n genai-local genai-local-text-generation
 helm uninstall genai-local -n genai-local
 kubectl delete namespace genai-local
 
+# Script de déploiement cloud
+
+#!/bin/bash
+ENVIRONMENT=${1:-dev}
+CLOUD=${2:-aws}
+
+## Déploiement CLOUD
+helm upgrade --install genai-${ENVIRONMENT} . \
+  --namespace genai-${ENVIRONMENT} \
+  --values values-cloud.yaml \
+  --values environnements/values-${ENVIRONMENT}.yaml \
+  --values environnements/values-${CLOUD}.yaml \
+  --atomic \
+  --wait
